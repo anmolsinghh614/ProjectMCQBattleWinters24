@@ -191,7 +191,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\anees\\mcqBattleApp\\backend\\prisma\\prisma\\generated\\prisma",
+      "value": "D:\\Adhyaay-7\\Projects\\McqBattleApp\\backend\\prisma\\prisma\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -205,7 +205,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\anees\\mcqBattleApp\\backend\\prisma\\schema.prisma",
+    "sourceFilePath": "D:\\Adhyaay-7\\Projects\\McqBattleApp\\backend\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -219,7 +219,6 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
