@@ -13,7 +13,7 @@ import { playerRequestRouter } from "./routes/playerRequest";
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: "https://mcq-battle-app.vercel.app",
+  origin: "https://project-mcq-battle-winters24.vercel.app",
   credentials: true
 }));
 
