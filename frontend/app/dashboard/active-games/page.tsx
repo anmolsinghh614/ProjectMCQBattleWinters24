@@ -67,20 +67,16 @@ export default function ActiveGamesPage() {
         return
       }
 
-      // Fetch all games
       const response = await getAllGames()
       const data = await response
 
-      // Filter to only show WAITING games and exclude user's own games
       const waitingGames = (data || []).filter((game: Game) => game.status === "WAITING" && game.userId !== userId)
 
       setGames(waitingGames)
 
-      // Fetch user's existing requests
       const myRequestsData = await getMyPlayerRequests(token)
       const myRequests = myRequestsData || []
 
-      // Set initial request status based on player status and existing requests
       const initialRequestStatus: RequestStatus = {}
       waitingGames.forEach((game: Game) => {
         const isPlayer = game.players?.some((player) => player.userId === userId)
@@ -88,7 +84,6 @@ export default function ActiveGamesPage() {
         if (isPlayer) {
           initialRequestStatus[game.id] = "player"
         } else {
-          // Check if user has an existing request for this game
           const existingRequest = myRequests.find((req: any) => req.gameId === game.id)
 
           if (existingRequest) {
@@ -133,7 +128,6 @@ export default function ActiveGamesPage() {
     }
   }, [router])
 
-  // Set up Pusher subscription for general game events
   useEffect(() => {
     if (!authorized || !currentUser) return
 
@@ -141,23 +135,21 @@ export default function ActiveGamesPage() {
 
     channel.bind("new-game", (newGameEvent: PusherGameEvent) => {
       if (newGameEvent.status === "WAITING") {
-        // Convert Pusher event to Game format
         const newGame: Game = {
           id: newGameEvent.id,
           game: newGameEvent.game,
-          userId: "", // Not provided in Pusher event
+          userId: "",
           createdAt: newGameEvent.createdAt,
           status: newGameEvent.status as "WAITING",
-          players: [], // Empty players array for new games
+          players: [],
           user: {
-            id: "", // Not provided in Pusher event
+            id: "",
             username: newGameEvent.creator,
             email: "",
             password: "",
           },
         }
 
-        // Only add if it's not the current user's game
         if (newGame.userId !== currentUser.id) {
           setGames((prevGames) => {
             const gameExists = prevGames.some((game) => game.id === newGame.id)
@@ -167,7 +159,6 @@ export default function ActiveGamesPage() {
             return prevGames
           })
 
-          // Set initial request status
           setRequestStatus((prev) => ({
             ...prev,
             [newGame.id]: "none",
@@ -176,7 +167,6 @@ export default function ActiveGamesPage() {
       }
     })
 
-    // Add listener for game deletion
     channel.bind("game-deleted", (deletedGameEvent: { gameId: string }) => {
       setGames((prevGames) => prevGames.filter((game) => game.id !== deletedGameEvent.gameId))
       setRequestStatus((prev) => {
@@ -186,34 +176,28 @@ export default function ActiveGamesPage() {
       })
     })
 
-    // Clean up subscription on unmount
     return () => {
       pusherClient.unsubscribe("games")
     }
   }, [authorized, currentUser])
 
-  // Set up Pusher subscriptions for individual game channels - similar to my-requests page
   useEffect(() => {
     if (!authorized || !currentUser || games.length === 0) return
 
     const gameIds = [...new Set(games.map((game) => game.id))]
 
-    // Subscribe to game channels for both approval and rejection notifications
     const gameChannels = gameIds.map((gameId) => {
       const channel = pusherClient.subscribe(`game-${gameId}`)
 
-      // Listen for when the user's request is approved
       channel.bind("player-approved", (data: { userId: string }) => {
         console.log("Player approved event received:", data)
 
         if (data.userId === currentUser.id) {
-          // Update the request status to approved
           setRequestStatus((prev) => ({
             ...prev,
             [gameId]: "approved",
           }))
 
-          // Find the game name for the toast
           const approvedGame = games.find((game) => game.id === gameId)
           if (approvedGame) {
             toastSuccess(`Your request to join "${approvedGame.game}" has been approved!`)
@@ -221,21 +205,17 @@ export default function ActiveGamesPage() {
         }
       })
 
-      // Listen for when a player request is rejected
       channel.bind(
         "player-rejected",
         (data: { requestId: string; userId: string; gameId: string; message: string }) => {
           console.log("Player rejected event received:", data)
 
-          // Check if the rejected user is the current user
           if (data.userId === currentUser.id && data.gameId === gameId) {
-            // Update the request status to rejected
             setRequestStatus((prev) => ({
               ...prev,
               [gameId]: "rejected",
             }))
 
-            // Show the exact message from the backend
             toastError(data.message || "Your request was rejected.")
           }
         },
@@ -244,7 +224,6 @@ export default function ActiveGamesPage() {
       return channel
     })
 
-    // Clean up subscriptions on unmount
     return () => {
       gameChannels.forEach((channel) => {
         pusherClient.unsubscribe(channel.name)
@@ -269,7 +248,6 @@ export default function ActiveGamesPage() {
         error: "Failed to send join request",
       })
 
-      // Update request status to pending
       setRequestStatus((prev) => ({
         ...prev,
         [gameId]: "pending",
@@ -342,7 +320,7 @@ export default function ActiveGamesPage() {
           text: isJoining ? "Sending Request..." : "Send Join Request",
           disabled: isJoining,
           onClick: () => handleJoinRequest(gameId),
-          className: "w-full bg-blue-600 hover:bg-blue-700 text-white font-medium",
+          className: "w-full bg-amber-600 hover:bg-amber-700 text-white font-medium",
           icon: <UserPlus className="w-4 h-4 mr-2" />,
         }
     }
@@ -382,22 +360,22 @@ export default function ActiveGamesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-6">
+    <div className="min-h-screen bg-amber-50 pt-6">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center">
-              <Gamepad2 className="h-6 w-6 text-blue-600 mr-2" />
+            <h1 className="text-2xl font-bold text-amber-950 flex items-center">
+              <Gamepad2 className="h-6 w-6 text-amber-600 mr-2" />
               Active Games
             </h1>
-            <p className="text-slate-600 mt-1">
+            <p className="text-amber-700 mt-1">
               Join waiting games and start battling! {games.length} game{games.length !== 1 ? "s" : ""} available
             </p>
           </div>
           <Button
             onClick={fetchActiveGames}
             variant="outline"
-            className="border-slate-200 text-slate-700"
+            className="border-amber-200 text-amber-700 bg-transparent"
             disabled={loading}
           >
             {loading ? "Refreshing..." : "Refresh"}
@@ -407,7 +385,7 @@ export default function ActiveGamesPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <Card key={i} className="border border-slate-200 shadow-sm">
+              <Card key={i} className="border border-amber-200 shadow-sm">
                 <CardHeader>
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
@@ -419,15 +397,15 @@ export default function ActiveGamesPage() {
             ))}
           </div>
         ) : games.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-lg border border-slate-200 shadow-sm">
-            <Gamepad2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-slate-900 mb-2">No Waiting Games</h2>
-            <p className="text-slate-600 mb-6 max-w-md mx-auto">
+          <div className="text-center py-16 bg-white rounded-lg border border-amber-200 shadow-sm">
+            <Gamepad2 className="w-16 h-16 text-amber-200 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-amber-950 mb-2">No Waiting Games</h2>
+            <p className="text-amber-700 mb-6 max-w-md mx-auto">
               There are no games waiting for players right now. Check back later or create your own game!
             </p>
             <Button
               onClick={() => router.push("/dashboard/create-game")}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-2"
             >
               Create Your Own Game
             </Button>
@@ -441,14 +419,14 @@ export default function ActiveGamesPage() {
               return (
                 <Card
                   key={game.id}
-                  className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200"
+                  className="border border-amber-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-slate-900 text-lg mb-1 line-clamp-2">{game.game}</CardTitle>
-                        <CardDescription className="text-slate-600 flex items-center">
-                          <User className="h-3.5 w-3.5 mr-1 text-slate-400" />
+                        <CardTitle className="text-amber-950 text-lg mb-1 line-clamp-2">{game.game}</CardTitle>
+                        <CardDescription className="text-amber-700 flex items-center">
+                          <User className="h-3.5 w-3.5 mr-1 text-amber-600" />
                           Created by {game.user.username}
                         </CardDescription>
                       </div>
@@ -462,17 +440,17 @@ export default function ActiveGamesPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 gap-4 text-sm">
-                      <div className="flex items-center text-slate-600">
-                        <Trophy className="w-4 h-4 mr-2 text-slate-500" />
+                      <div className="flex items-center text-amber-700">
+                        <Trophy className="w-4 h-4 mr-2 text-amber-600" />
                         Quiz Game
                       </div>
-                      <div className="flex items-center text-slate-600">
-                        <User className="w-4 h-4 mr-2 text-slate-500" />
+                      <div className="flex items-center text-amber-700">
+                        <User className="w-4 h-4 mr-2 text-amber-600" />
                         {game.players?.length || 0} player{(game.players?.length || 0) !== 1 ? "s" : ""} joined
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                    <div className="flex items-center justify-between text-xs text-amber-700 pt-1">
                       <div className="flex items-center">
                         <Clock className="h-3.5 w-3.5 mr-1" />
                         {formatTimeAgo(game.createdAt)}

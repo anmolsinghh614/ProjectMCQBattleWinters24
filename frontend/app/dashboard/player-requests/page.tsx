@@ -51,20 +51,17 @@ export default function PlayerRequestsPage() {
         return
       }
 
-      // First, fetch the user's games
       const gamesResponse = await getAllMyGames(token)
 
       const gamesData = await gamesResponse
       const games = gamesData.games || []
 
-      // Create a map of game IDs to game objects
       const gamesMap = new Map<string, Game>()
       games.forEach((game: Game) => {
         gamesMap.set(game.id, game)
       })
       setUserGames(gamesMap)
 
-      // Now fetch requests for each game
       const allRequests: PlayerRequest[] = []
 
       for (const game of games) {
@@ -73,7 +70,6 @@ export default function PlayerRequestsPage() {
         allRequests.push(...gameRequests)
       }
 
-      // Sort by creation date, newest first
       allRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
       setRequests(allRequests)
@@ -96,7 +92,6 @@ export default function PlayerRequestsPage() {
     }
   }, [router])
 
-  // Set up Pusher subscription for each game
   useEffect(() => {
     if (!authorized || userGames.size === 0) return
 
@@ -104,7 +99,6 @@ export default function PlayerRequestsPage() {
       const channel = pusherClient.subscribe(`game-${gameId}`)
 
       channel.bind("player-request", (data: { userId: string; requestId: string }) => {
-        // Fetch the new request details
         const fetchNewRequest = async () => {
           try {
             const token = localStorage.getItem("Authorization")
@@ -129,7 +123,6 @@ export default function PlayerRequestsPage() {
       return channel
     })
 
-    // Clean up subscriptions on unmount
     return () => {
       channels.forEach((channel) => {
         pusherClient.unsubscribe(channel.name)
@@ -137,24 +130,20 @@ export default function PlayerRequestsPage() {
     }
   }, [authorized, userGames])
 
-  // Set up Pusher subscription for each request
   useEffect(() => {
     if (!authorized || requests.length === 0) return
 
     const channels = requests.map((request) => {
-      // Use a combination of request ID and a timestamp to ensure uniqueness
       const channelName = `request-${request.id}`
       const channel = pusherClient.subscribe(channelName)
 
       channel.bind("request-cancelled", (data: { requestId: string; userId: string; status: string }) => {
-        // Remove the cancelled request from the requests list
         setRequests((prev) => prev.filter((req) => req.id !== data.requestId))
       })
 
       return { name: channelName, channel }
     })
 
-    // Clean up subscriptions on unmount
     return () => {
       channels.forEach((channelInfo) => {
         pusherClient.unsubscribe(channelInfo.name)
@@ -179,7 +168,6 @@ export default function PlayerRequestsPage() {
         error: "Failed to approve request",
       })
 
-      // Update the request status locally
       setRequests((prev) => prev.map((req) => (req.id === requestId ? { ...req, status: "APPROVED" } : req)))
     } catch (error) {
       console.error("Error approving request:", error)
@@ -203,7 +191,6 @@ export default function PlayerRequestsPage() {
         error: "Failed to reject request",
       })
 
-      // Update the request status locally
       setRequests((prev) => prev.map((req) => (req.id === requestId ? { ...req, status: "REJECTED" } : req)))
     } catch (error) {
       console.error("Error rejecting request:", error)
@@ -227,29 +214,29 @@ export default function PlayerRequestsPage() {
   const processedRequests = requests.filter((req) => req.status !== "PENDING")
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-6">
+    <div className="min-h-screen bg-amber-50 pt-6">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center">
-              <UserPlus className="h-6 w-6 text-blue-600 mr-2" />
+            <h1 className="text-2xl font-bold text-amber-950 flex items-center">
+              <UserPlus className="h-6 w-6 text-amber-600 mr-2" />
               Player Requests
             </h1>
-            <p className="text-slate-600 mt-1">
+            <p className="text-amber-700 mt-1">
               Manage requests from players who want to join your games ({pendingRequests.length} pending)
             </p>
           </div>
         </div>
 
         {loading ? (
-          <Card className="border border-slate-200 shadow-sm">
+          <Card className="border border-amber-200 shadow-sm">
             <CardHeader>
               <CardTitle>Loading Requests...</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                  <div key={i} className="flex items-center justify-between p-4 border border-amber-200 rounded-lg">
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-1/4" />
                       <Skeleton className="h-4 w-1/3" />
@@ -267,40 +254,40 @@ export default function PlayerRequestsPage() {
         ) : (
           <>
             {/* Pending Requests */}
-            <Card className="border border-slate-200 shadow-sm mb-6">
+            <Card className="border border-amber-200 shadow-sm mb-6">
               <CardHeader>
-                <CardTitle className="text-slate-900 flex items-center">
-                  <Clock className="h-5 w-5 text-blue-600 mr-2" />
+                <CardTitle className="text-amber-950 flex items-center">
+                  <Clock className="h-5 w-5 text-amber-600 mr-2" />
                   Pending Requests ({pendingRequests.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {pendingRequests.length === 0 ? (
                   <div className="text-center py-8">
-                    <UserPlus className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <h3 className="text-lg font-medium text-slate-900 mb-2">No Pending Requests</h3>
-                    <p className="text-slate-600">You don't have any pending player requests for your games.</p>
+                    <UserPlus className="w-12 h-12 text-amber-200 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-amber-950 mb-2">No Pending Requests</h3>
+                    <p className="text-amber-700">You don't have any pending player requests for your games.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {pendingRequests.map((request, index) => (
                       <div
                         key={`pending-${request.id}-${index}`}
-                        className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                        className="flex items-center justify-between p-4 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="flex items-center text-slate-900 font-medium">
-                              <User className="h-4 w-4 text-slate-500 mr-2" />
+                            <div className="flex items-center text-amber-950 font-medium">
+                              <User className="h-4 w-4 text-amber-600 mr-2" />
                               {request.user.username}
                             </div>
-                            <span className="text-slate-500">wants to join</span>
-                            <div className="flex items-center text-slate-900 font-medium">
-                              <Gamepad2 className="h-4 w-4 text-slate-500 mr-1" />
+                            <span className="text-amber-700">wants to join</span>
+                            <div className="flex items-center text-amber-950 font-medium">
+                              <Gamepad2 className="h-4 w-4 text-amber-600 mr-1" />
                               {userGames.get(request.gameId)?.game || "Unknown Game"}
                             </div>
                           </div>
-                          <div className="flex items-center text-sm text-slate-500">
+                          <div className="flex items-center text-sm text-amber-700">
                             <Clock className="h-3.5 w-3.5 mr-1" />
                             Requested on {formatDateTime(request.createdAt)}
                           </div>
@@ -320,7 +307,7 @@ export default function PlayerRequestsPage() {
                             disabled={processingRequest === request.id}
                             size="sm"
                             variant="outline"
-                            className="border-slate-200 text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                            className="border-amber-200 text-amber-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                           >
                             <X className="w-4 h-4 mr-1" />
                             Reject
@@ -335,10 +322,10 @@ export default function PlayerRequestsPage() {
 
             {/* Processed Requests */}
             {processedRequests.length > 0 && (
-              <Card className="border border-slate-200 shadow-sm">
+              <Card className="border border-amber-200 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-slate-900 flex items-center">
-                    <Check className="h-5 w-5 text-slate-600 mr-2" />
+                  <CardTitle className="text-amber-950 flex items-center">
+                    <Check className="h-5 w-5 text-amber-600 mr-2" />
                     Processed Requests ({processedRequests.length})
                   </CardTitle>
                 </CardHeader>
@@ -347,21 +334,21 @@ export default function PlayerRequestsPage() {
                     {processedRequests.map((request, index) => (
                       <div
                         key={`processed-${request.id}-${index}`}
-                        className="flex items-center justify-between p-4 border border-slate-200 rounded-lg bg-slate-25 opacity-75"
+                        className="flex items-center justify-between p-4 border border-amber-200 rounded-lg bg-amber-25 opacity-75"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="flex items-center text-slate-900 font-medium">
-                              <User className="h-4 w-4 text-slate-500 mr-2" />
+                            <div className="flex items-center text-amber-950 font-medium">
+                              <User className="h-4 w-4 text-amber-600 mr-2" />
                               {request.user.username}
                             </div>
-                            <span className="text-slate-500">requested to join</span>
-                            <div className="flex items-center text-slate-900 font-medium">
-                              <Gamepad2 className="h-4 w-4 text-slate-500 mr-1" />
+                            <span className="text-amber-700">requested to join</span>
+                            <div className="flex items-center text-amber-950 font-medium">
+                              <Gamepad2 className="h-4 w-4 text-amber-600 mr-1" />
                               {userGames.get(request.gameId)?.game || "Unknown Game"}
                             </div>
                           </div>
-                          <div className="flex items-center text-sm text-slate-500">
+                          <div className="flex items-center text-sm text-amber-700">
                             <Clock className="h-3.5 w-3.5 mr-1" />
                             Requested on {formatDateTime(request.createdAt)}
                           </div>

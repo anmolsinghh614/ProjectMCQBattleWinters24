@@ -61,7 +61,6 @@ export default function MyGamesPage() {
     }
   }
 
-  // Initialize Pusher once
   useEffect(() => {
     if (!pusherRef.current) {
       pusherRef.current = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
@@ -77,11 +76,9 @@ export default function MyGamesPage() {
     }
   }, [])
 
-  // Subscribe to game channels when games change
   useEffect(() => {
     if (!pusherRef.current || games.length === 0) return
 
-    // Subscribe to new game channels
     games.forEach((game) => {
       const channelName = `game-${game.id}`
 
@@ -113,7 +110,6 @@ export default function MyGamesPage() {
       }
     })
 
-    // Cleanup function to unsubscribe from channels that are no longer needed
     return () => {
       const currentGameIds = new Set(games.map((game) => game.id))
 
@@ -167,14 +163,12 @@ export default function MyGamesPage() {
         throw new Error("Authorization token not found")
       }
 
-      // Optimistically update the UI
       setGames((prevGames) => prevGames.map((g) => (g.id === gameId ? { ...g, status: "STARTED" as const } : g)))
 
       await startGame(token, gameId)
       toastSuccess("Game started successfully!")
     } catch (error) {
       console.error("Error starting game:", error)
-      // Revert optimistic update on error
       fetchMyGames()
     }
   }
@@ -186,14 +180,12 @@ export default function MyGamesPage() {
         throw new Error("Authorization token not found")
       }
 
-      // Optimistically update the UI
       setGames((prevGames) => prevGames.map((g) => (g.id === gameId ? { ...g, status: "COMPLETED" as const } : g)))
 
       await endGame(token, gameId)
       toastSuccess("Game ended successfully!")
     } catch (error) {
       console.error("Error ending game:", error)
-      // Revert optimistic update on error
       fetchMyGames()
     }
   }
@@ -236,17 +228,20 @@ export default function MyGamesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-6">
+    <div className="min-h-screen bg-amber-50 pt-6">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center">
-              <Trophy className="h-6 w-6 text-blue-600 mr-2" />
+            <h1 className="text-2xl font-bold text-amber-950 flex items-center">
+              <Trophy className="h-6 w-6 text-amber-600 mr-2" />
               My Games
             </h1>
-            <p className="text-slate-600 mt-1">Manage and play your QuizBattle games</p>
+            <p className="text-amber-700 mt-1">Manage and play your QuizBattle games</p>
           </div>
-          <Button onClick={handleCreateGame} className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2">
+          <Button
+            onClick={handleCreateGame}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-medium px-4 py-2"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create New Game
           </Button>
@@ -255,7 +250,7 @@ export default function MyGamesPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <Card key={i} className="border border-slate-200 shadow-sm">
+              <Card key={i} className="border border-amber-200 shadow-sm">
                 <CardHeader>
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
@@ -267,15 +262,15 @@ export default function MyGamesPage() {
             ))}
           </div>
         ) : games.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-lg border border-slate-200 shadow-sm">
-            <Gamepad2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-slate-900 mb-2">No Games Yet!</h2>
-            <p className="text-slate-600 mb-6 max-w-md mx-auto">
+          <div className="text-center py-16 bg-white rounded-lg border border-amber-200 shadow-sm">
+            <Gamepad2 className="w-16 h-16 text-amber-200 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-amber-950 mb-2">No Games Yet!</h2>
+            <p className="text-amber-700 mb-6 max-w-md mx-auto">
               You haven't created any quiz games yet. Start your first game and challenge your friends!
             </p>
             <Button
               onClick={handleCreateGame}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-2"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Game
@@ -289,13 +284,13 @@ export default function MyGamesPage() {
               return (
                 <Card
                   key={game.id}
-                  className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200"
+                  className="border border-amber-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-slate-900 text-lg mb-1 line-clamp-2">{game.game}</CardTitle>
-                        <CardDescription className="text-slate-600">
+                        <CardTitle className="text-amber-950 text-lg mb-1 line-clamp-2">{game.game}</CardTitle>
+                        <CardDescription className="text-amber-700">
                           Created on {new Date(game.createdAt).toLocaleDateString()}
                         </CardDescription>
                       </div>
@@ -306,12 +301,12 @@ export default function MyGamesPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center text-slate-600">
-                        <Users className="w-4 h-4 mr-2 text-slate-500" />
+                      <div className="flex items-center text-amber-700">
+                        <Users className="w-4 h-4 mr-2 text-amber-600" />
                         {game.players.length} players
                       </div>
-                      <div className="flex items-center text-slate-600">
-                        <Trophy className="w-4 h-4 mr-2 text-slate-500" />
+                      <div className="flex items-center text-amber-700">
+                        <Trophy className="w-4 h-4 mr-2 text-amber-600" />
                         {game.questions.length} questions
                       </div>
                     </div>
@@ -336,7 +331,7 @@ export default function MyGamesPage() {
                       ) : (
                         <Button
                           onClick={() => handleStartGame(game.id)}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                          className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium"
                         >
                           <Play className="w-4 h-4 mr-2" />
                           Start Game
@@ -347,7 +342,7 @@ export default function MyGamesPage() {
                         onClick={() => handleEditGame(game.id)}
                         variant="outline"
                         size="icon"
-                        className="border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                        className="border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300"
                         disabled={game.status === "STARTED"}
                       >
                         <Edit className="w-4 h-4" />
@@ -358,13 +353,13 @@ export default function MyGamesPage() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                            className="border-amber-200 text-amber-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 bg-transparent"
                             disabled={game.status === "STARTED"}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white border-slate-200">
+                        <AlertDialogContent className="bg-white border-amber-200">
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Game</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -372,7 +367,7 @@ export default function MyGamesPage() {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900">
+                            <AlertDialogCancel className="border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-900">
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
