@@ -16,7 +16,7 @@ import { requestOtp, signin, verifyOtp } from "@/lib/api/auth"
 import { useRouter } from "next/navigation"
 
 export default function AuthPage() {
-  const router= useRouter();
+  const router = useRouter()
   const [isSignUpStep, setIsSignUpStep] = useState<"form" | "otp" | "success">("form")
   const [isLoading, setIsLoading] = useState(false)
   const [otpLoading, setOtpLoading] = useState(false)
@@ -33,81 +33,73 @@ export default function AuthPage() {
   const signinUsernameRef = useRef<HTMLInputElement>(null)
   const signinPasswordRef = useRef<HTMLInputElement>(null)
 
- 
-const handleSignIn = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
 
-  const username = signinUsernameRef.current?.value?.trim();
-  const password = signinPasswordRef.current?.value;
+    const username = signinUsernameRef.current?.value?.trim()
+    const password = signinPasswordRef.current?.value
 
-  if (!username || !password) {
-    toastError("Please enter both username and password");
-    setIsLoading(false);
-    return;
-  }
+    if (!username || !password) {
+      toastError("Please enter both username and password")
+      setIsLoading(false)
+      return
+    }
 
-  try {
-    const response = await toastPromise(
-      signin(username, password),
-      {
+    try {
+      const response = await toastPromise(signin(username, password), {
         success: "Signed In Successfully",
         error: "Wrong Credentials",
         loading: "Verifying",
+      })
+      if (!response?.token) {
+        throw new Error("Token missing in response")
       }
-    );
-    if (!response?.token) {
-      throw new Error("Token missing in response");
+      localStorage.setItem("Authorization", response.token)
+      localStorage.setItem("username", response.username)
+      localStorage.setItem("userId", response.userId)
+      router.push("/dashboard/my-games")
+    } catch (err: any) {
+      toastError(err?.response?.data?.msg || "Error in Verifying")
+    } finally {
+      setIsLoading(false)
+      localStorage.removeItem("otpToken")
     }
-    localStorage.setItem("Authorization",response.token);
-    localStorage.setItem("username",response.username);
-    localStorage.setItem("userId",response.userId)
-    router.push("/dashboard/my-games");
-  } catch (err: any) {
-    toastError(err?.response?.data?.msg || "Error in Verifying");
-  } finally {
-    setIsLoading(false);
-    localStorage.removeItem("otpToken");
-  }
-};
-
-const handleSignUpSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-
-  const username = signupUsernameRef.current?.value?.trim();
-  const email = signupEmailRef.current?.value?.trim();
-  const password = signupPasswordRef.current?.value;
-  if (!username || !email || !password) {
-    toastError("Please fill in all fields.");
-    setIsLoading(false);
-    return;
   }
 
-  try {
-    const response = await toastPromise(
-      requestOtp(username, email, password), 
-      {
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    const username = signupUsernameRef.current?.value?.trim()
+    const email = signupEmailRef.current?.value?.trim()
+    const password = signupPasswordRef.current?.value
+    if (!username || !email || !password) {
+      toastError("Please fill in all fields.")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await toastPromise(requestOtp(username, email, password), {
         success: "OTP Sent",
         error: "Error sending OTP",
         loading: "Sending OTP...",
+      })
+
+      if (!response?.token) {
+        throw new Error("OTP token missing in response")
       }
-    );
 
-    if (!response?.token) {
-      throw new Error("OTP token missing in response");
+      localStorage.setItem("otpToken", response.token)
+      setIsSignUpStep("otp")
+    } catch (err: any) {
+      toastError(err?.response?.data?.msg || "Unexpected error occurred.")
+      console.error("Error during OTP request:", err)
+    } finally {
+      setIsLoading(false)
     }
-
-    localStorage.setItem("otpToken", response.token);
-    setIsSignUpStep("otp");
-  } catch (err: any) {
-    toastError(err?.response?.data?.msg || "Unexpected error occurred.");
-    console.error("Error during OTP request:", err);
-  } finally {
-    setIsLoading(false);
   }
-};
-
 
   const handleRequestOtp = async () => {
     setOtpLoading(true)
@@ -125,41 +117,37 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
   }
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
+    e.preventDefault()
+    setIsLoading(true)
 
-  const otpString = otp.join("").trim();
-  const token = localStorage.getItem("otpToken");
+    const otpString = otp.join("").trim()
+    const token = localStorage.getItem("otpToken")
 
-  if (!otpString || otpString.length !== 6 || !token) {
-    toastError("Please enter the 6-digit OTP.");
-    setIsLoading(false);
-    return;
-  }
+    if (!otpString || otpString.length !== 6 || !token) {
+      toastError("Please enter the 6-digit OTP.")
+      setIsLoading(false)
+      return
+    }
 
-  try {
-    await toastPromise(
-      verifyOtp(token, otpString), 
-      {
+    try {
+      await toastPromise(verifyOtp(token, otpString), {
         success: "OTP has been Verified",
         error: "Invalid or expired OTP",
         loading: "Verifying OTP...",
-      }
-    );
-    setIsSignUpStep("form");
-    setOtp(["", "", "", "", "", ""]);
-    localStorage.removeItem("otpToken");
+      })
+      setIsSignUpStep("form")
+      setOtp(["", "", "", "", "", ""])
+      localStorage.removeItem("otpToken")
 
-    const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement;
-    signinTab?.click();
-  } catch (err: any) {
-    toastError(err?.response?.data?.msg || "Unexpected error during OTP verification.");
-    console.error("Error during OTP verification:", err);
-  } finally {
-    setIsLoading(false);
+      const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement
+      signinTab?.click()
+    } catch (err: any) {
+      toastError(err?.response?.data?.msg || "Unexpected error during OTP verification.")
+      console.error("Error during OTP verification:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
-};
-
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
@@ -181,19 +169,19 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center mb-4">
-            <Gamepad2 className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-2xl font-bold text-gray-900">QuizBattle</span>
+            <Gamepad2 className="h-8 w-8 text-amber-600" />
+            <span className="ml-2 text-2xl font-bold text-amber-950">QuizBattle</span>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome to QuizBattle</h1>
-          <p className="text-gray-500 mt-2">Join the ultimate MCQ battle experience</p>
+          <h1 className="text-2xl font-bold text-amber-950">Welcome to QuizBattle</h1>
+          <p className="text-amber-700 mt-2">Join the ultimate MCQ battle experience</p>
         </div>
 
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur">
+        <Card className="shadow-2xl border-2 border-amber-200 bg-white">
           {isSignUpStep === "otp" ? (
             <CardContent className="p-6">
               <div className="space-y-4">
@@ -202,8 +190,8 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Verify Your Email</h2>
-                    <p className="text-sm text-gray-500">We've sent a 6-digit code to {signUpData.email}</p>
+                    <h2 className="text-xl font-bold text-amber-950">Verify Your Email</h2>
+                    <p className="text-sm text-amber-700">We've sent a 6-digit code to {signUpData.email}</p>
                   </div>
                 </div>
 
@@ -219,7 +207,7 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
                           value={digit}
                           onChange={(e) => handleOtpChange(index, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                          className="w-12 h-12 text-center text-lg font-bold"
+                          className="w-12 h-12 text-center text-lg font-bold border-2 border-amber-200 focus:border-amber-600"
                           maxLength={1}
                         />
                       ))}
@@ -227,14 +215,14 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
                   </div>
 
                   <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-2">Didn't receive the code?</p>
+                    <p className="text-sm text-amber-700 mb-2">Didn't receive the code?</p>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={handleRequestOtp}
                       disabled={otpLoading}
-                      className="text-blue-600 hover:text-blue-700"
+                      className="text-amber-600 hover:text-amber-700"
                     >
                       {otpLoading ? (
                         <>
@@ -249,7 +237,7 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                     disabled={isLoading || otp.some((digit) => !digit)}
                   >
                     {isLoading ? (
@@ -266,30 +254,44 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
             </CardContent>
           ) : (
             <Tabs defaultValue="signin" className="w-full">
-              <CardHeader className="pb-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Sign In</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <CardHeader className="pb-4 border-b border-amber-100">
+                <TabsList className="grid w-full grid-cols-2 bg-amber-50">
+                  <TabsTrigger
+                    value="signin"
+                    className="data-[state=active]:bg-amber-600 data-[state=active]:text-white"
+                  >
+                    Sign In
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="signup"
+                    className="data-[state=active]:bg-amber-600 data-[state=active]:text-white"
+                  >
+                    Sign Up
+                  </TabsTrigger>
                 </TabsList>
               </CardHeader>
 
               <CardContent className="p-6 pt-0">
                 <TabsContent value="signin" className="space-y-4 mt-0">
                   <div className="space-y-2">
-                    <CardTitle className="text-xl">Welcome Back</CardTitle>
-                    <CardDescription>Sign in to your account to continue battling</CardDescription>
+                    <CardTitle className="text-xl text-amber-950">Welcome Back</CardTitle>
+                    <CardDescription className="text-amber-700">
+                      Sign in to your account to continue battling
+                    </CardDescription>
                   </div>
 
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signin-username">Username</Label>
+                      <Label htmlFor="signin-username" className="text-amber-950">
+                        Username
+                      </Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-amber-400" />
                         <Input
                           id="signin-username"
                           type="text"
                           placeholder="Enter your username"
-                          className="pl-10"
+                          className="pl-10 border-amber-200 focus:border-amber-600"
                           required
                           ref={signinUsernameRef}
                         />
@@ -297,14 +299,16 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="signin-password">Password</Label>
+                      <Label htmlFor="signin-password" className="text-amber-950">
+                        Password
+                      </Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-amber-400" />
                         <Input
                           id="signin-password"
                           type="password"
                           placeholder="Enter your password"
-                          className="pl-10"
+                          className="pl-10 border-amber-200 focus:border-amber-600"
                           required
                           ref={signinPasswordRef}
                         />
@@ -313,17 +317,21 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="remember" className="rounded border-gray-300" />
-                        <Label htmlFor="remember" className="text-sm text-gray-600">
+                        <input type="checkbox" id="remember" className="rounded border-amber-300" />
+                        <Label htmlFor="remember" className="text-sm text-amber-700">
                           Remember me
                         </Label>
                       </div>
-                      <Link href="/forget-password" className="text-sm text-blue-600 hover:text-blue-700">
+                      <Link href="/forget-password" className="text-sm text-amber-600 hover:text-amber-700">
                         Forgot password?
                       </Link>
                     </div>
 
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                    <Button
+                      type="submit"
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                      disabled={isLoading}
+                    >
                       {isLoading ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -338,20 +346,24 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
 
                 <TabsContent value="signup" className="space-y-4 mt-0">
                   <div className="space-y-2">
-                    <CardTitle className="text-xl">Create Account</CardTitle>
-                    <CardDescription>Join thousands of players in epic quiz battles</CardDescription>
+                    <CardTitle className="text-xl text-amber-950">Create Account</CardTitle>
+                    <CardDescription className="text-amber-700">
+                      Join thousands of players in epic quiz battles
+                    </CardDescription>
                   </div>
 
                   <form onSubmit={handleSignUpSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signup-username">Username</Label>
+                      <Label htmlFor="signup-username" className="text-amber-950">
+                        Username
+                      </Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-amber-400" />
                         <Input
                           id="signup-username"
                           type="text"
                           placeholder="Choose a username"
-                          className="pl-10"
+                          className="pl-10 border-amber-200 focus:border-amber-600"
                           required
                           ref={signupUsernameRef}
                         />
@@ -359,14 +371,16 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
+                      <Label htmlFor="signup-email" className="text-amber-950">
+                        Email
+                      </Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-amber-400" />
                         <Input
                           id="signup-email"
                           type="email"
                           placeholder="Enter your email"
-                          className="pl-10"
+                          className="pl-10 border-amber-200 focus:border-amber-600"
                           required
                           ref={signupEmailRef}
                         />
@@ -374,14 +388,16 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
+                      <Label htmlFor="signup-password" className="text-amber-950">
+                        Password
+                      </Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-amber-400" />
                         <Input
                           id="signup-password"
                           type="password"
                           placeholder="Create a password"
-                          className="pl-10"
+                          className="pl-10 border-amber-200 focus:border-amber-600"
                           required
                           ref={signupPasswordRef}
                         />
@@ -389,7 +405,11 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
                     </div>
 
                     <div className="space-y-3">
-                      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                      <Button
+                        type="submit"
+                        className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                        disabled={isLoading}
+                      >
                         {isLoading ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -401,19 +421,19 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
                       </Button>
 
                       <div className="text-center">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700">
                           We'll send a verification code to your email
                         </Badge>
                       </div>
                     </div>
 
-                    <div className="text-center text-xs text-gray-500">
+                    <div className="text-center text-xs text-amber-700">
                       By signing up, you agree to our{" "}
-                      <Link href="#" className="text-blue-600 hover:text-blue-700">
+                      <Link href="#" className="text-amber-600 hover:text-amber-700">
                         Terms of Service
                       </Link>{" "}
                       and{" "}
-                      <Link href="#" className="text-blue-600 hover:text-blue-700">
+                      <Link href="#" className="text-amber-600 hover:text-amber-700">
                         Privacy Policy
                       </Link>
                     </div>
@@ -426,7 +446,7 @@ const handleSignUpSubmit = async (e: React.FormEvent) => {
 
         {/* Back to Home */}
         <div className="text-center mt-6">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-1">
+          <Link href="/" className="text-sm text-amber-700 hover:text-amber-900 inline-flex items-center gap-1">
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>

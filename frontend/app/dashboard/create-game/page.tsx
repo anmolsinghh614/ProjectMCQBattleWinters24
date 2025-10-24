@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Slide } from "react-toastify";
+import { Slide } from "react-toastify"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -173,106 +173,110 @@ export default function CreateGamePage() {
     return true
   }
 
-const handleSaveGame = async () => {
-  if (!validateForm()) return;
+  const handleSaveGame = async () => {
+    if (!validateForm()) return
 
-  setLoading(true);
+    setLoading(true)
 
-  try {
-    await toastPromise(
-      (async () => {
-        const token = localStorage.getItem("Authorization");
-        if (!token) throw new Error("No authorization token found");
+    try {
+      await toastPromise(
+        (async () => {
+          const token = localStorage.getItem("Authorization")
+          if (!token) throw new Error("No authorization token found")
 
-        // Step 1: Create the game
-        const createdGame = await createGame(token, gameName);
-        const gameId = createdGame.id;
+          // Step 1: Create the game
+          const createdGame = await createGame(token, gameName)
+          const gameId = createdGame.id
 
-        // Step 2: Create questions and options
-        for (const question of questions) {
-          const createdQuestion = await createQuestion(token, {
-            question: question.question,
-            explanation: question.explanation,
-            gameId,
-          });
-
-          const questionId = createdQuestion.id;
-
-          // Step 3: Create options for this question
-          for (const option of question.options) {
-            await createOption(token, {
-              option: option.option,
-              isCorrect: option.isCorrect,
-              questionId,
+          // Step 2: Create questions and options
+          for (const question of questions) {
+            const createdQuestion = await createQuestion(token, {
+              question: question.question,
+              explanation: question.explanation,
               gameId,
-            });
+            })
+
+            const questionId = createdQuestion.id
+
+            // Step 3: Create options for this question
+            for (const option of question.options) {
+              await createOption(token, {
+                option: option.option,
+                isCorrect: option.isCorrect,
+                questionId,
+                gameId,
+              })
+            }
           }
-        }
 
-        console.log("Game, questions, and options created successfully.");
-      })(),
-      {
-        loading: "Creating your game...",
-        success: "Game created successfully!",
-        error: (err) => `Error: ${err.message || "Failed to create game"}`,
-      }
-    );
+          console.log("Game, questions, and options created successfully.")
+        })(),
+        {
+          loading: "Creating your game...",
+          success: "Game created successfully!",
+          error: (err) => `Error: ${err.message || "Failed to create game"}`,
+        },
+      )
 
-    // Redirect after a short delay
-    setTimeout(() => {
-      router.push("/dashboard/my-games");
-    }, 1000);
-  } catch (error) {
-    console.error("Error creating game:", error);
-    toastError(error instanceof Error ? error.message : "An unknown error occurred");
-  } finally {
-    setLoading(false);
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.push("/dashboard/my-games")
+      }, 1000)
+    } catch (error) {
+      console.error("Error creating game:", error)
+      toastError(error instanceof Error ? error.message : "An unknown error occurred")
+    } finally {
+      setLoading(false)
+    }
   }
-};
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-6">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 pt-6">
       <ToastContainer
-          position="bottom-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={true}
-          closeOnClick={true}
-          rtl={false}
-          pauseOnFocusLoss={true}
-          draggable={true}
-          pauseOnHover={true}
-          theme="light"
-          transition={Slide}
-          limit={3}
-          toastClassName="!bg-white !text-gray-900 !rounded-lg !shadow-lg !border !border-gray-200"
-          progressClassName="!bg-blue-500"
-          closeButton={true}
-          style={{
-            fontSize: "14px",
-            fontFamily: "system-ui, -apple-system, sans-serif",
-          }}
-        />
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick={true}
+        rtl={false}
+        pauseOnFocusLoss={true}
+        draggable={true}
+        pauseOnHover={true}
+        theme="light"
+        transition={Slide}
+        limit={3}
+        toastClassName="!bg-white !text-gray-900 !rounded-lg !shadow-lg !border !border-gray-200"
+        progressClassName="!bg-amber-600"
+        closeButton={true}
+        style={{
+          fontSize: "14px",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+        }}
+      />
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <Button variant="ghost" onClick={() => router.back()} className="mr-4 text-slate-600 hover:text-slate-900">
+            <Button
+              variant="ghost"
+              onClick={() => router.back()}
+              className="mr-4 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 flex items-center">
-                <HelpCircle className="h-6 w-6 text-blue-600 mr-2" />
+              <h1 className="text-2xl font-bold text-amber-950 flex items-center">
+                <HelpCircle className="h-6 w-6 text-amber-600 mr-2" />
                 Create New Game
               </h1>
-              <p className="text-slate-600 mt-1">Set up your QuizBattle game with questions and answers</p>
+              <p className="text-amber-700 mt-1">Set up your QuizBattle game with questions and answers</p>
             </div>
           </div>
           <Button
             onClick={handleSaveGame}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-2"
           >
             <Save className="w-4 h-4 mr-2" />
             {loading ? "Saving..." : "Save Game"}
@@ -280,15 +284,15 @@ const handleSaveGame = async () => {
         </div>
 
         {/* Game Name */}
-        <Card className="border border-slate-200 shadow-sm mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg text-slate-900">Game Details</CardTitle>
-            <CardDescription>Enter the basic information for your game</CardDescription>
+        <Card className="border-2 border-amber-200 shadow-md mb-6 bg-white">
+          <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50 border-b border-amber-100">
+            <CardTitle className="text-lg text-amber-950">Game Details</CardTitle>
+            <CardDescription className="text-amber-700">Enter the basic information for your game</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="gameName" className="text-slate-700 font-medium">
+                <Label htmlFor="gameName" className="text-amber-950 font-medium">
                   Game Name
                 </Label>
                 <Input
@@ -296,7 +300,7 @@ const handleSaveGame = async () => {
                   value={gameName}
                   onChange={(e) => setGameName(e.target.value)}
                   placeholder="Enter your game name..."
-                  className="mt-1"
+                  className="mt-1 border-amber-200 focus:border-amber-600"
                 />
               </div>
             </div>
@@ -306,20 +310,24 @@ const handleSaveGame = async () => {
         {/* Questions */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-900">Questions ({questions.length})</h2>
-            <Button onClick={addQuestion} variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50">
+            <h2 className="text-xl font-bold text-amber-950">Questions ({questions.length})</h2>
+            <Button
+              onClick={addQuestion}
+              variant="outline"
+              className="border-amber-300 text-amber-600 hover:bg-amber-50 bg-transparent"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Question
             </Button>
           </div>
 
           {questions.length === 0 ? (
-            <Card className="border border-slate-200 shadow-sm">
+            <Card className="border-2 border-dashed border-amber-200 shadow-sm bg-white">
               <CardContent className="text-center py-12">
-                <HelpCircle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No Questions Yet</h3>
-                <p className="text-slate-600 mb-4">Start by adding your first question to the game</p>
-                <Button onClick={addQuestion} className="bg-blue-600 hover:bg-blue-700 text-white font-medium">
+                <HelpCircle className="w-12 h-12 text-amber-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-amber-950 mb-2">No Questions Yet</h3>
+                <p className="text-amber-700 mb-4">Start by adding your first question to the game</p>
+                <Button onClick={addQuestion} className="bg-amber-600 hover:bg-amber-700 text-white font-medium">
                   <Plus className="w-4 h-4 mr-2" />
                   Add First Question
                 </Button>
@@ -327,10 +335,10 @@ const handleSaveGame = async () => {
             </Card>
           ) : (
             questions.map((question, questionIndex) => (
-              <Card key={question.id} className="border border-slate-200 shadow-sm">
-                <CardHeader>
+              <Card key={question.id} className="border-2 border-amber-200 shadow-md bg-white">
+                <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50 border-b border-amber-100">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg text-slate-900">Question {questionIndex + 1}</CardTitle>
+                    <CardTitle className="text-lg text-amber-950">Question {questionIndex + 1}</CardTitle>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
@@ -357,15 +365,15 @@ const handleSaveGame = async () => {
                     </AlertDialog>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-6">
                   {/* Question Text */}
                   <div>
-                    <Label className="text-slate-700 font-medium">Question</Label>
+                    <Label className="text-amber-950 font-medium">Question</Label>
                     <Textarea
                       value={question.question}
                       onChange={(e) => updateQuestion(question.id, "question", e.target.value)}
                       placeholder="Enter your question..."
-                      className="mt-1"
+                      className="mt-1 border-amber-200 focus:border-amber-600"
                       rows={3}
                     />
                   </div>
@@ -373,12 +381,12 @@ const handleSaveGame = async () => {
                   {/* Options */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-slate-700 font-medium">Answer Options</Label>
+                      <Label className="text-amber-950 font-medium">Answer Options</Label>
                       <Button
                         onClick={() => addOption(question.id)}
                         variant="outline"
                         size="sm"
-                        className="border-slate-200 text-slate-600 hover:bg-slate-50"
+                        className="border-amber-300 text-amber-600 hover:bg-amber-50"
                       >
                         <Plus className="w-3 h-3 mr-1" />
                         Add Option
@@ -396,7 +404,7 @@ const handleSaveGame = async () => {
                               value={option.option}
                               onChange={(e) => updateOption(question.id, option.id, e.target.value)}
                               placeholder={`Option ${optionIndex + 1}...`}
-                              className="flex-1"
+                              className="flex-1 border-amber-200 focus:border-amber-600"
                             />
                             {question.options.length > 2 && (
                               <Button
@@ -412,19 +420,19 @@ const handleSaveGame = async () => {
                         ))}
                       </div>
                     </RadioGroup>
-                    <p className="text-sm text-slate-500 mt-2">
+                    <p className="text-sm text-amber-700 mt-2">
                       Select the correct answer by clicking the radio button
                     </p>
                   </div>
 
                   {/* Explanation */}
                   <div>
-                    <Label className="text-slate-700 font-medium">Explanation</Label>
+                    <Label className="text-amber-950 font-medium">Explanation</Label>
                     <Textarea
                       value={question.explanation}
                       onChange={(e) => updateQuestion(question.id, "explanation", e.target.value)}
                       placeholder="Explain why this is the correct answer..."
-                      className="mt-1"
+                      className="mt-1 border-amber-200 focus:border-amber-600"
                       rows={2}
                     />
                   </div>
@@ -440,7 +448,7 @@ const handleSaveGame = async () => {
             <Button
               onClick={handleSaveGame}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-medium px-8 py-3"
             >
               <Save className="w-4 h-4 mr-2" />
               {loading ? "Saving Game..." : "Save Game"}
