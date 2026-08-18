@@ -85,7 +85,7 @@ questionRouter.get("/", async (req, res) => {
 });
 
 questionRouter.put("/:id", userMiddleware, async (req, res) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const { question, explanation } = req.body;
   const userId = req.body.userId;
 
@@ -125,7 +125,7 @@ questionRouter.put("/:id", userMiddleware, async (req, res) => {
 });
 
 questionRouter.post("/delete/:id", userMiddleware, async (req, res) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const userId = req.body.userId;
 
   try {
