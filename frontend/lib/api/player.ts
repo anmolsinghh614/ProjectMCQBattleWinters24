@@ -1,5 +1,39 @@
 import axios from "./axiosInstance";
 
+const bearer = (token: string) => ({
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const getFirstQuestion = async (token: string, gameId: string) => {
+  const res = await axios.post(
+    `/players/first-question?gameId=${gameId}`,
+    {},
+    bearer(token)
+  );
+  return res.data;
+};
+
+export const submitPlayerAnswer = async (
+  token: string,
+  data: { gameId: string; userId: string; questionId: string; optionId: string }
+) => {
+  const res = await axios.post("/players/player-answer", data, bearer(token));
+  return res.data;
+};
+
+export const leavePlayerGame = async (
+  token: string,
+  gameId: string,
+  userId: string
+) => {
+  const res = await axios.post(
+    "/players/player-leave",
+    { gameId, userId },
+    bearer(token)
+  );
+  return res.data;
+};
+
 export const sendPlayerRequest = async (gameId: string, token: string) => {
   const response = await axios.post(
     `/playerRequest/makeRequest/${gameId}`,

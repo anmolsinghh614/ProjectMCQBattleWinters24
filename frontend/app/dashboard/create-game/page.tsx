@@ -19,13 +19,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Plus, Trash2, Save, ArrowLeft, HelpCircle } from "lucide-react"
+import { Plus, Trash2, Save, ArrowLeft, HelpCircle, Sparkles, Loader2 } from "lucide-react"
 import { toastError, toastWarning, toastPromise } from "@/utils/toast"
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { createGame } from "@/lib/api/game"
 import { createQuestion } from "@/lib/api/question"
 import { createOption } from "@/lib/api/option"
+import { generateQuestions } from "@/lib/api/ai"
 
 interface Option {
   id: string
@@ -45,6 +46,61 @@ export default function CreateGamePage() {
   const [gameName, setGameName] = useState("")
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
+
+  // AI generation state
+  const [aiTopic, setAiTopic] = useState("")
+  const [aiDifficulty, setAiDifficulty] = useState<"easy" | "medium" | "hard">("medium")
+  const [aiCount, setAiCount] = useState(5)
+  const [aiLoading, setAiLoading] = useState(false)
+
+  const handleGenerateWithAI = async () => {
+    if (!aiTopic.trim()) {
+      toastError("Please enter a topic to generate questions")
+      return
+    }
+
+    setAiLoading(true)
+    try {
+      const token = localStorage.getItem("Authorization")
+      if (!token) {
+        router.push("/auth")
+        return
+      }
+
+      const generated = await toastPromise(
+        generateQuestions(token, {
+          topic: aiTopic.trim(),
+          difficulty: aiDifficulty,
+          count: aiCount,
+        }),
+        {
+          loading: `Generating ${aiCount} question${aiCount !== 1 ? "s" : ""} with AI...`,
+          success: "Questions generated! Review and edit before saving.",
+          error: (err: any) => err?.response?.data?.error || "Failed to generate questions",
+        },
+      )
+
+      const mapped: Question[] = generated.map((q, qi) => ({
+        id: `ai_${Date.now()}_${qi}`,
+        question: q.question,
+        explanation: q.explanation,
+        options: q.options.map((opt, oi) => ({
+          id: `ai_${Date.now()}_${qi}_${oi}`,
+          option: opt.option,
+          isCorrect: opt.isCorrect,
+        })),
+      }))
+
+      setQuestions((prev) => [...prev, ...mapped])
+      if (!gameName.trim()) {
+        setGameName(aiTopic.trim())
+      }
+    } catch (error) {
+      console.error("Error generating questions:", error)
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   const addQuestion = () => {
     const newQuestion: Question = {
@@ -303,6 +359,90 @@ export default function CreateGamePage() {
                   className="mt-1 border-amber-200 focus:border-amber-600"
                 />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Generation */}
+        <Card className="border-2 border-purple-200 shadow-md mb-6 bg-gradient-to-br from-purple-50 to-indigo-50">
+          <CardHeader className="border-b border-purple-100">
+            <CardTitle className="text-lg text-purple-950 flex items-center">
+              <Sparkles className="h-5 w-5 text-purple-600 mr-2" />
+              Generate with AI
+            </CardTitle>
+            <CardDescription className="text-purple-700">
+              Describe a topic and let AI draft questions for you. You can edit everything before saving.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Label className="text-purple-950 font-medium">Topic / Prompt</Label>
+                <Input
+                  value={aiTopic}
+                  onChange={(e) => setAiTopic(e.target.value)}
+                  placeholder="e.g. World War II, React hooks, Photosynthesis..."
+                  className="mt-1 border-purple-200 focus:border-purple-600"
+                  disabled={aiLoading}
+                />
+              </div>
+              <div>
+                <Label className="text-purple-950 font-medium">Difficulty</Label>
+                <div className="mt-2 flex gap-2">
+                  {(["easy", "medium", "hard"] as const).map((level) => (
+                    <Button
+                      key={level}
+                      type="button"
+                      onClick={() => setAiDifficulty(level)}
+                      disabled={aiLoading}
+                      variant={aiDifficulty === level ? "default" : "outline"}
+                      className={
+                        aiDifficulty === level
+                          ? "bg-purple-600 hover:bg-purple-700 text-white capitalize flex-1"
+                          : "border-purple-300 text-purple-700 hover:bg-purple-50 capitalize flex-1"
+                      }
+                    >
+                      {level}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="aiCount" className="text-purple-950 font-medium">
+                  Number of questions
+                </Label>
+                <Input
+                  id="aiCount"
+                  type="number"
+                  min={1}
+                  max={15}
+                  value={aiCount}
+                  onChange={(e) =>
+                    setAiCount(Math.max(1, Math.min(15, Number(e.target.value) || 1)))
+                  }
+                  className="mt-1 border-purple-200 focus:border-purple-600"
+                  disabled={aiLoading}
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button
+                onClick={handleGenerateWithAI}
+                disabled={aiLoading}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-medium"
+              >
+                {aiLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate Questions
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>

@@ -5060,6 +5060,7 @@ export namespace Prisma {
     id: string | null
     question: string | null
     explanation: string | null
+    aiExplanation: string | null
     gameId: string | null
     createdAt: Date | null
   }
@@ -5068,6 +5069,7 @@ export namespace Prisma {
     id: string | null
     question: string | null
     explanation: string | null
+    aiExplanation: string | null
     gameId: string | null
     createdAt: Date | null
   }
@@ -5076,6 +5078,7 @@ export namespace Prisma {
     id: number
     question: number
     explanation: number
+    aiExplanation: number
     gameId: number
     createdAt: number
     _all: number
@@ -5086,6 +5089,7 @@ export namespace Prisma {
     id?: true
     question?: true
     explanation?: true
+    aiExplanation?: true
     gameId?: true
     createdAt?: true
   }
@@ -5094,6 +5098,7 @@ export namespace Prisma {
     id?: true
     question?: true
     explanation?: true
+    aiExplanation?: true
     gameId?: true
     createdAt?: true
   }
@@ -5102,6 +5107,7 @@ export namespace Prisma {
     id?: true
     question?: true
     explanation?: true
+    aiExplanation?: true
     gameId?: true
     createdAt?: true
     _all?: true
@@ -5183,6 +5189,7 @@ export namespace Prisma {
     id: string
     question: string
     explanation: string
+    aiExplanation: string | null
     gameId: string
     createdAt: Date
     _count: QuestionCountAggregateOutputType | null
@@ -5208,6 +5215,7 @@ export namespace Prisma {
     id?: boolean
     question?: boolean
     explanation?: boolean
+    aiExplanation?: boolean
     gameId?: boolean
     createdAt?: boolean
     game?: boolean | GameDefaultArgs<ExtArgs>
@@ -5220,6 +5228,7 @@ export namespace Prisma {
     id?: boolean
     question?: boolean
     explanation?: boolean
+    aiExplanation?: boolean
     gameId?: boolean
     createdAt?: boolean
     game?: boolean | GameDefaultArgs<ExtArgs>
@@ -5229,6 +5238,7 @@ export namespace Prisma {
     id?: boolean
     question?: boolean
     explanation?: boolean
+    aiExplanation?: boolean
     gameId?: boolean
     createdAt?: boolean
     game?: boolean | GameDefaultArgs<ExtArgs>
@@ -5238,11 +5248,12 @@ export namespace Prisma {
     id?: boolean
     question?: boolean
     explanation?: boolean
+    aiExplanation?: boolean
     gameId?: boolean
     createdAt?: boolean
   }
 
-  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "question" | "explanation" | "gameId" | "createdAt", ExtArgs["result"]["question"]>
+  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "question" | "explanation" | "aiExplanation" | "gameId" | "createdAt", ExtArgs["result"]["question"]>
   export type QuestionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     game?: boolean | GameDefaultArgs<ExtArgs>
     options?: boolean | Question$optionsArgs<ExtArgs>
@@ -5267,6 +5278,7 @@ export namespace Prisma {
       id: string
       question: string
       explanation: string
+      aiExplanation: string | null
       gameId: string
       createdAt: Date
     }, ExtArgs["result"]["question"]>
@@ -5698,6 +5710,7 @@ export namespace Prisma {
     readonly id: FieldRef<"Question", 'String'>
     readonly question: FieldRef<"Question", 'String'>
     readonly explanation: FieldRef<"Question", 'String'>
+    readonly aiExplanation: FieldRef<"Question", 'String'>
     readonly gameId: FieldRef<"Question", 'String'>
     readonly createdAt: FieldRef<"Question", 'DateTime'>
   }
@@ -9461,6 +9474,7 @@ export namespace Prisma {
     id: 'id',
     question: 'question',
     explanation: 'explanation',
+    aiExplanation: 'aiExplanation',
     gameId: 'gameId',
     createdAt: 'createdAt'
   };
@@ -9516,6 +9530,14 @@ export namespace Prisma {
   };
 
   export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+  export const NullsOrder: {
+    first: 'first',
+    last: 'last'
+  };
+
+  export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
   /**
@@ -9811,6 +9833,7 @@ export namespace Prisma {
     id?: StringFilter<"Question"> | string
     question?: StringFilter<"Question"> | string
     explanation?: StringFilter<"Question"> | string
+    aiExplanation?: StringNullableFilter<"Question"> | string | null
     gameId?: StringFilter<"Question"> | string
     createdAt?: DateTimeFilter<"Question"> | Date | string
     game?: XOR<GameScalarRelationFilter, GameWhereInput>
@@ -9822,6 +9845,7 @@ export namespace Prisma {
     id?: SortOrder
     question?: SortOrder
     explanation?: SortOrder
+    aiExplanation?: SortOrderInput | SortOrder
     gameId?: SortOrder
     createdAt?: SortOrder
     game?: GameOrderByWithRelationInput
@@ -9836,6 +9860,7 @@ export namespace Prisma {
     NOT?: QuestionWhereInput | QuestionWhereInput[]
     question?: StringFilter<"Question"> | string
     explanation?: StringFilter<"Question"> | string
+    aiExplanation?: StringNullableFilter<"Question"> | string | null
     gameId?: StringFilter<"Question"> | string
     createdAt?: DateTimeFilter<"Question"> | Date | string
     game?: XOR<GameScalarRelationFilter, GameWhereInput>
@@ -9847,6 +9872,7 @@ export namespace Prisma {
     id?: SortOrder
     question?: SortOrder
     explanation?: SortOrder
+    aiExplanation?: SortOrderInput | SortOrder
     gameId?: SortOrder
     createdAt?: SortOrder
     _count?: QuestionCountOrderByAggregateInput
@@ -9861,6 +9887,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Question"> | string
     question?: StringWithAggregatesFilter<"Question"> | string
     explanation?: StringWithAggregatesFilter<"Question"> | string
+    aiExplanation?: StringNullableWithAggregatesFilter<"Question"> | string | null
     gameId?: StringWithAggregatesFilter<"Question"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
   }
@@ -10245,6 +10272,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     createdAt?: Date | string
     game: GameCreateNestedOneWithoutQuestionsInput
     options?: OptionCreateNestedManyWithoutQuestionInput
@@ -10255,6 +10283,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     gameId: string
     createdAt?: Date | string
     options?: OptionUncheckedCreateNestedManyWithoutQuestionInput
@@ -10265,6 +10294,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     game?: GameUpdateOneRequiredWithoutQuestionsNestedInput
     options?: OptionUpdateManyWithoutQuestionNestedInput
@@ -10275,6 +10305,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     gameId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     options?: OptionUncheckedUpdateManyWithoutQuestionNestedInput
@@ -10285,6 +10316,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     gameId: string
     createdAt?: Date | string
   }
@@ -10293,6 +10325,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -10300,6 +10333,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     gameId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10720,10 +10754,30 @@ export namespace Prisma {
     _max?: NestedIntFilter<$PrismaModel>
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type OptionListRelationFilter = {
     every?: OptionWhereInput
     some?: OptionWhereInput
     none?: OptionWhereInput
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
   }
 
   export type OptionOrderByRelationAggregateInput = {
@@ -10734,6 +10788,7 @@ export namespace Prisma {
     id?: SortOrder
     question?: SortOrder
     explanation?: SortOrder
+    aiExplanation?: SortOrder
     gameId?: SortOrder
     createdAt?: SortOrder
   }
@@ -10742,6 +10797,7 @@ export namespace Prisma {
     id?: SortOrder
     question?: SortOrder
     explanation?: SortOrder
+    aiExplanation?: SortOrder
     gameId?: SortOrder
     createdAt?: SortOrder
   }
@@ -10750,8 +10806,27 @@ export namespace Prisma {
     id?: SortOrder
     question?: SortOrder
     explanation?: SortOrder
+    aiExplanation?: SortOrder
     gameId?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type BoolFilter<$PrismaModel = never> = {
@@ -11306,6 +11381,10 @@ export namespace Prisma {
     connect?: UserAnswerWhereUniqueInput | UserAnswerWhereUniqueInput[]
   }
 
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+  }
+
   export type GameUpdateOneRequiredWithoutQuestionsNestedInput = {
     create?: XOR<GameCreateWithoutQuestionsInput, GameUncheckedCreateWithoutQuestionsInput>
     connectOrCreate?: GameCreateOrConnectWithoutQuestionsInput
@@ -11629,6 +11708,48 @@ export namespace Prisma {
     not?: NestedFloatFilter<$PrismaModel> | number
   }
 
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
@@ -11930,6 +12051,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     createdAt?: Date | string
     options?: OptionCreateNestedManyWithoutQuestionInput
     answers?: UserAnswerCreateNestedManyWithoutQuestionInput
@@ -11939,6 +12061,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     createdAt?: Date | string
     options?: OptionUncheckedCreateNestedManyWithoutQuestionInput
     answers?: UserAnswerUncheckedCreateNestedManyWithoutQuestionInput
@@ -12076,6 +12199,7 @@ export namespace Prisma {
     id?: StringFilter<"Question"> | string
     question?: StringFilter<"Question"> | string
     explanation?: StringFilter<"Question"> | string
+    aiExplanation?: StringNullableFilter<"Question"> | string | null
     gameId?: StringFilter<"Question"> | string
     createdAt?: DateTimeFilter<"Question"> | Date | string
   }
@@ -12384,6 +12508,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     createdAt?: Date | string
     game: GameCreateNestedOneWithoutQuestionsInput
     answers?: UserAnswerCreateNestedManyWithoutQuestionInput
@@ -12393,6 +12518,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     gameId: string
     createdAt?: Date | string
     answers?: UserAnswerUncheckedCreateNestedManyWithoutQuestionInput
@@ -12444,6 +12570,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     game?: GameUpdateOneRequiredWithoutQuestionsNestedInput
     answers?: UserAnswerUpdateManyWithoutQuestionNestedInput
@@ -12453,6 +12580,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     gameId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     answers?: UserAnswerUncheckedUpdateManyWithoutQuestionNestedInput
@@ -12530,6 +12658,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     createdAt?: Date | string
     game: GameCreateNestedOneWithoutQuestionsInput
     options?: OptionCreateNestedManyWithoutQuestionInput
@@ -12539,6 +12668,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     gameId: string
     createdAt?: Date | string
     options?: OptionUncheckedCreateNestedManyWithoutQuestionInput
@@ -12647,6 +12777,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     game?: GameUpdateOneRequiredWithoutQuestionsNestedInput
     options?: OptionUpdateManyWithoutQuestionNestedInput
@@ -12656,6 +12787,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     gameId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     options?: OptionUncheckedUpdateManyWithoutQuestionNestedInput
@@ -12941,6 +13073,7 @@ export namespace Prisma {
     id?: string
     question: string
     explanation: string
+    aiExplanation?: string | null
     createdAt?: Date | string
   }
 
@@ -12985,6 +13118,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     options?: OptionUpdateManyWithoutQuestionNestedInput
     answers?: UserAnswerUpdateManyWithoutQuestionNestedInput
@@ -12994,6 +13128,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     options?: OptionUncheckedUpdateManyWithoutQuestionNestedInput
     answers?: UserAnswerUncheckedUpdateManyWithoutQuestionNestedInput
@@ -13003,6 +13138,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     question?: StringFieldUpdateOperationsInput | string
     explanation?: StringFieldUpdateOperationsInput | string
+    aiExplanation?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

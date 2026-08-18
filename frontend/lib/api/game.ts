@@ -80,4 +80,9 @@ export const getGameById = async (token: string, gameId: string) => {
   return res.data;
 };
 
+export const getGameStatus = async (gameId: string) => {
+  const res = await axios.get(`/games/${gameId}/status`);
+  return res.data;
+};
+
 

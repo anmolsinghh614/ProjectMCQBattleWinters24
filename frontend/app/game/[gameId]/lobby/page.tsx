@@ -5,10 +5,12 @@ import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, Trophy, Clock, Gamepad2, LogOut, Play, CheckCircle2, XCircle, Loader2 } from "lucide-react"
+import { Users, Trophy, Clock, Gamepad2, LogOut, Play, CheckCircle2, XCircle, Loader2, Sparkles } from "lucide-react"
 import pusherClient from "@/lib/pusherClient"
 import { toastSuccess, toastError, toastInfo } from "@/utils/toast"
-import axios from "axios"
+import { explainAnswer } from "@/lib/api/ai"
+import { getGameStatus, startGame as startGameApi } from "@/lib/api/game"
+import { getFirstQuestion, submitPlayerAnswer, leavePlayerGame } from "@/lib/api/player"
 import { Toaster } from "react-hot-toast"
 
 interface User {
@@ -76,17 +78,23 @@ export default function GameLobbyPage() {
   const [gameEnded, setGameEnded] = useState(false)
   const [showingAnswerResult, setShowingAnswerResult] = useState(false)
 
+  // AI explanation state
+  const [explanation, setExplanation] = useState<string | null>(null)
+  const [explanationLoading, setExplanationLoading] = useState(false)
+
   // Store next question data in a ref to avoid re-renders
   const nextQuestionRef = useRef<Question | null>(null)
   const answerTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const advanceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastAnsweredQuestionRef = useRef<string | null>(null)
+  const answeredQuestionIdRef = useRef<string | null>(null)
+  const answeredOptionIdRef = useRef<string | null>(null)
 
   // Updated to work with your status endpoint
   const checkGameStatusAndLoad = async () => {
     try {
       // Use your status endpoint
-      const statusResponse = await fetch(`https://projectmcqbattlewinters24.onrender.com/api/v1/games/${gameId}/status`)
-      const statusData: GameStatusResponse = await statusResponse.json()
+      const statusData: GameStatusResponse = await getGameStatus(gameId)
 
       const token = localStorage.getItem("Authorization")
       const userId = localStorage.getItem("userId")
@@ -148,11 +156,7 @@ export default function GameLobbyPage() {
   // Lightweight status check for periodic updates
   const quickStatusCheck = async () => {
     try {
-      const statusResponse = await fetch(`https://projectmcqbattlewinters24.onrender.com/api/v1/games/${gameId}/status`)
-
-      if (!statusResponse.ok) return
-
-      const statusData: GameStatusResponse = await statusResponse.json()
+      const statusData: GameStatusResponse = await getGameStatus(gameId)
 
       // Update game state with new status and players
       setGame((prevGame) => {
@@ -203,19 +207,8 @@ export default function GameLobbyPage() {
       }
 
       console.log("Fetching first question...")
-      const response = await axios.post(
-        `https://projectmcqbattlewinters24.onrender.com/api/v1/players/first-question?gameId=${gameId}`,
-        {}, // Empty body
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Ensure it's prefixed with 'Bearer'
-            "Content-Type": "application/json",
-          },
-        },
-      )
-      console.log("First question response:", response.data)
-
-      const data = response.data
+      const data = await getFirstQuestion(token, gameId)
+      console.log("First question response:", data)
 
       if (data.id) {
         setCurrentQuestion(data)
@@ -242,6 +235,8 @@ export default function GameLobbyPage() {
 
     // Store the current question ID to match with Pusher event
     lastAnsweredQuestionRef.current = currentQuestion.id
+    answeredQuestionIdRef.current = currentQuestion.id
+    answeredOptionIdRef.current = optionId
 
     try {
       const token = localStorage.getItem("Authorization")
@@ -252,25 +247,12 @@ export default function GameLobbyPage() {
       }
 
       console.log(`Submitting answer for question ${currentQuestion.id}, option: ${optionId}`)
-      const response = await fetch("https://projectmcqbattlewinters24.onrender.com/api/v1/players/player-answer", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          gameId,
-          userId,
-          questionId: currentQuestion.id,
-          optionId,
-        }),
+      const data = await submitPlayerAnswer(token, {
+        gameId,
+        userId,
+        questionId: currentQuestion.id,
+        optionId,
       })
-
-      if (!response.ok) {
-        throw new Error("Failed to submit answer")
-      }
-
-      const data = await response.json()
       console.log("Answer submission response:", data)
 
       // Store next question in ref but don't show it yet
@@ -318,9 +300,17 @@ export default function GameLobbyPage() {
       clearTimeout(answerTimeoutRef.current)
       answerTimeoutRef.current = null
     }
+    if (advanceTimeoutRef.current) {
+      clearTimeout(advanceTimeoutRef.current)
+      advanceTimeoutRef.current = null
+    }
 
     // Reset the last answered question
     lastAnsweredQuestionRef.current = null
+
+    // Reset AI explanation state
+    setExplanation(null)
+    setExplanationLoading(false)
 
     if (nextQuestionRef.current) {
       console.log("Moving to next question:", nextQuestionRef.current.question)
@@ -340,6 +330,43 @@ export default function GameLobbyPage() {
     setShowingAnswerResult(false)
   }
 
+  // Fetch an AI explanation for the question just answered.
+  // Cancels the auto-advance so the player can read it.
+  const handleExplain = async () => {
+    const questionId = answeredQuestionIdRef.current
+    if (!questionId) return
+
+    // Stop the game from auto-advancing while reading.
+    if (advanceTimeoutRef.current) {
+      clearTimeout(advanceTimeoutRef.current)
+      advanceTimeoutRef.current = null
+    }
+    if (answerTimeoutRef.current) {
+      clearTimeout(answerTimeoutRef.current)
+      answerTimeoutRef.current = null
+    }
+
+    setExplanationLoading(true)
+    try {
+      const token = localStorage.getItem("Authorization")
+      if (!token) {
+        router.push("/auth")
+        return
+      }
+
+      const data = await explainAnswer(token, {
+        questionId,
+        optionId: answeredOptionIdRef.current || undefined,
+      })
+      setExplanation(data.explanation)
+    } catch (error) {
+      console.error("Error fetching explanation:", error)
+      toastError("Failed to load explanation")
+    } finally {
+      setExplanationLoading(false)
+    }
+  }
+
   // Start game
   const startGame = async () => {
     setStartingGame(true)
@@ -353,20 +380,7 @@ export default function GameLobbyPage() {
         return
       }
 
-      const response = await fetch(`https://projectmcqbattlewinters24.onrender.com/api/v1/games/${gameId}/start`, {
-        method: "PATCH",
-        headers: {
-          Authorization: token,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to start game")
-      }
+      await startGameApi(token, gameId)
 
       // Don't show success toast here since Pusher will handle it
       console.log("Game start request sent successfully")
@@ -389,17 +403,7 @@ export default function GameLobbyPage() {
         return
       }
 
-      const response = await fetch("https://projectmcqbattlewinters24.onrender.com/api/players/player-leave", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          gameId,
-          userId,
-        }),
-      })
+      await leavePlayerGame(token, gameId, userId)
 
       router.push("/dashboard/my-games")
     } catch (error) {
@@ -446,17 +450,14 @@ export default function GameLobbyPage() {
       if (token && userId) {
         try {
           // Get fresh game status to ensure we have the latest player data
-          const statusResponse = await fetch(`https://projectmcqbattlewinters24.onrender.com/api/v1/games/${gameId}/status`)
-          if (statusResponse.ok) {
-            const statusData: GameStatusResponse = await statusResponse.json()
-            const isPlayer = statusData.players.some((player) => player.id === userId)
+          const statusData: GameStatusResponse = await getGameStatus(gameId)
+          const isPlayer = statusData.players.some((player) => player.id === userId)
 
-            if (isPlayer) {
-              console.log("Current user is a player, fetching first question...")
-              await fetchFirstQuestion()
-            } else {
-              console.log("Current user is not a player in this game")
-            }
+          if (isPlayer) {
+            console.log("Current user is a player, fetching first question...")
+            await fetchFirstQuestion()
+          } else {
+            console.log("Current user is not a player in this game")
           }
         } catch (error) {
           console.error("Error checking player status after game start:", error)
@@ -516,8 +517,9 @@ export default function GameLobbyPage() {
               toastError("Wrong answer!")
             }
 
-            // Wait for 2.5 seconds to show the result, then move to next question
-            setTimeout(() => {
+            // Wait to show the result, then move to next question.
+            // Stored in a ref so requesting an AI explanation can cancel it.
+            advanceTimeoutRef.current = setTimeout(() => {
               moveToNextQuestion()
             }, 2500)
           }
@@ -551,6 +553,9 @@ export default function GameLobbyPage() {
       console.log(`Unsubscribing from Pusher channel: game-${gameId}`)
       if (answerTimeoutRef.current) {
         clearTimeout(answerTimeoutRef.current)
+      }
+      if (advanceTimeoutRef.current) {
+        clearTimeout(advanceTimeoutRef.current)
       }
       pusherClient.unsubscribe(`game-${gameId}`)
     }
@@ -834,6 +839,45 @@ export default function GameLobbyPage() {
                           >
                             {answerResult.message}
                           </span>
+                        </div>
+                      )}
+
+                      {/* AI explanation */}
+                      {answerResult && showingAnswerResult && (
+                        <div className="mb-6">
+                          {!explanation && !explanationLoading && (
+                            <Button
+                              onClick={handleExplain}
+                              variant="outline"
+                              className="border-purple-500 text-purple-300 hover:bg-purple-900/40 hover:text-purple-100"
+                            >
+                              <Sparkles className="h-4 w-4 mr-2" />
+                              Explain with AI
+                            </Button>
+                          )}
+
+                          {explanationLoading && (
+                            <div className="flex items-center text-purple-300 py-2">
+                              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                              Generating explanation...
+                            </div>
+                          )}
+
+                          {explanation && (
+                            <div className="p-4 rounded-lg bg-purple-900/40 border-2 border-purple-500">
+                              <div className="flex items-center mb-2 text-purple-200 font-semibold">
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                AI Explanation
+                              </div>
+                              <p className="text-purple-100 whitespace-pre-line">{explanation}</p>
+                              <Button
+                                onClick={moveToNextQuestion}
+                                className="mt-4 bg-blue-600 hover:bg-blue-700"
+                              >
+                                Next Question
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
 

@@ -6,8 +6,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Trophy, Medal, Award, Users, Target, ArrowLeft, Crown, Star } from "lucide-react"
+import { Trophy, Medal, Award, Users, Target, ArrowLeft, Crown, Star, Sparkles, Loader2, CheckCircle2 } from "lucide-react"
 import { getGameById } from "@/lib/api/game"
+import { explainAnswer } from "@/lib/api/ai"
+import { toastError } from "@/utils/toast"
 
 interface Player {
   id: string
@@ -62,6 +64,26 @@ export default function LeaderboardPage() {
   const [gameData, setGameData] = useState<GameData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [explanations, setExplanations] = useState<Record<string, string>>({})
+  const [explainingId, setExplainingId] = useState<string | null>(null)
+
+  const handleExplain = async (questionId: string) => {
+    setExplainingId(questionId)
+    try {
+      const token = localStorage.getItem("Authorization")
+      if (!token) {
+        router.push("/auth")
+        return
+      }
+      const data = await explainAnswer(token, { questionId })
+      setExplanations((prev) => ({ ...prev, [questionId]: data.explanation }))
+    } catch (err) {
+      console.error("Error fetching explanation:", err)
+      toastError("Failed to load explanation")
+    } finally {
+      setExplainingId(null)
+    }
+  }
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -332,6 +354,70 @@ export default function LeaderboardPage() {
             </Card>
           )}
         </div>
+
+        {/* Question Review with AI */}
+        {gameData.questions.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-purple-600 mr-2" />
+              Review Questions
+            </h2>
+            <div className="space-y-4">
+              {gameData.questions.map((question, index) => {
+                const correctOption = question.options.find((opt) => opt.isCorrect)
+                return (
+                  <Card key={question.id} className="border-slate-200 shadow-sm">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-900 mb-2">
+                            {index + 1}. {question.question}
+                          </p>
+                          {correctOption && (
+                            <div className="flex items-center text-sm text-green-700 mb-2">
+                              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                              <span className="font-medium">{correctOption.option}</span>
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          onClick={() => handleExplain(question.id)}
+                          disabled={explainingId === question.id || !!explanations[question.id]}
+                          variant="outline"
+                          size="sm"
+                          className="border-purple-300 text-purple-700 hover:bg-purple-50 shrink-0"
+                        >
+                          {explainingId === question.id ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Explain
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      {explanations[question.id] && (
+                        <div className="mt-3 p-4 rounded-lg bg-purple-50 border border-purple-200">
+                          <div className="flex items-center mb-2 text-purple-800 font-semibold text-sm">
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            AI Explanation
+                          </div>
+                          <p className="text-slate-700 text-sm whitespace-pre-line">
+                            {explanations[question.id]}
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Footer Actions */}
         <div className="mt-12 text-center pb-8">
