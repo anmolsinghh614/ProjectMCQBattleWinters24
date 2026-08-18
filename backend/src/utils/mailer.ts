@@ -4,8 +4,18 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASS,
+    // App passwords are 16 chars; Gmail displays them with spaces but the
+    // actual secret has none. Strip spaces so a copy-pasted value still works.
+    pass: process.env.GMAIL_APP_PASS?.replace(/\s+/g, ""),
   },
+});
+
+transporter.verify((error) => {
+  if (error) {
+    console.error("[mailer] Gmail transporter verification FAILED:", error);
+  } else {
+    console.log("[mailer] Gmail transporter is ready to send emails.");
+  }
 });
 
 export async function sendOtpEmail(email: string, otp: string, username: string) {
@@ -27,5 +37,6 @@ export async function sendOtpEmail(email: string, otp: string, username: string)
     });
   } catch (error) {
     console.error("Error sending OTP email:", error);
+    throw new Error("Failed to send OTP email.");
   }
 }

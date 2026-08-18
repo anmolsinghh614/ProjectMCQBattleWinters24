@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Gamepad2, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react"
+import { Gamepad2, Mail, Lock, User, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { toastError, toastPromise } from "@/utils/toast"
 import { requestOtp, signin, verifyOtp } from "@/lib/api/auth"
@@ -20,6 +20,8 @@ export default function AuthPage() {
   const [isSignUpStep, setIsSignUpStep] = useState<"form" | "otp" | "success">("form")
   const [isLoading, setIsLoading] = useState(false)
   const [otpLoading, setOtpLoading] = useState(false)
+  const [showSigninPassword, setShowSigninPassword] = useState(false)
+  const [showSignupPassword, setShowSignupPassword] = useState(false)
   const [signUpData, setSignUpData] = useState({
     username: "",
     email: "",
@@ -306,12 +308,21 @@ export default function AuthPage() {
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-amber-400" />
                         <Input
                           id="signin-password"
-                          type="password"
+                          type={showSigninPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="pl-10 border-amber-200 focus:border-amber-600"
+                          className="pl-10 pr-10 border-amber-200 focus:border-amber-600"
                           required
                           ref={signinPasswordRef}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowSigninPassword((v) => !v)}
+                          aria-label={showSigninPassword ? "Hide password" : "Show password"}
+                          className="absolute right-3 top-3 text-amber-400 hover:text-amber-600"
+                          tabIndex={-1}
+                        >
+                          {showSigninPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </div>
                     </div>
 
@@ -395,12 +406,21 @@ export default function AuthPage() {
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-amber-400" />
                         <Input
                           id="signup-password"
-                          type="password"
+                          type={showSignupPassword ? "text" : "password"}
                           placeholder="Create a password"
-                          className="pl-10 border-amber-200 focus:border-amber-600"
+                          className="pl-10 pr-10 border-amber-200 focus:border-amber-600"
                           required
                           ref={signupPasswordRef}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupPassword((v) => !v)}
+                          aria-label={showSignupPassword ? "Hide password" : "Show password"}
+                          className="absolute right-3 top-3 text-amber-400 hover:text-amber-600"
+                          tabIndex={-1}
+                        >
+                          {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </div>
                     </div>
 

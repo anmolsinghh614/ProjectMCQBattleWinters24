@@ -30,7 +30,14 @@ userRouter.post("/request-otp", async (req, res) => {
   const otpExpiry = dayjs().add(10, "minutes").toISOString();
   const passwordHash = await bcrypt.hash(password, 10);
   const otpHash = await bcrypt.hash(otp,10);
-  await sendOtpEmail(email, otp, username);
+
+  try {
+    await sendOtpEmail(email, otp, username);
+  } catch (err) {
+    console.error("Failed to send signup OTP:", err);
+    res.status(502).json({ msg: "Could not send OTP email. Please try again later." });
+    return;
+  }
 
   const tempToken = jwt.sign(
     { username, email, passwordHash, otpHash, otpExpiry },
@@ -152,7 +159,13 @@ userRouter.post("/forgot-password/request-otp", async (req, res) => {
   const otpExpiry = dayjs().add(10, "minutes").toISOString();
   const otpHash = await bcrypt.hash(otp, 10);
 
-  await sendOtpEmail(email, otp, user.username);
+  try {
+    await sendOtpEmail(email, otp, user.username);
+  } catch (err) {
+    console.error("Failed to send forgot-password OTP:", err);
+    res.status(502).json({ msg: "Could not send OTP email. Please try again later." });
+    return;
+  }
 
   const tempToken = jwt.sign(
     { email, otpHash, otpExpiry },
